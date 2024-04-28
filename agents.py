@@ -12,8 +12,8 @@ class UnicycleAgent:
         self.vel_r = None
         self.acc_u = acc_u
         self.acc_r = acc_r
-        self.max_x = max_x
-        self.max_y = max_y
+        self.max_x = max_x - 1
+        self.max_y = max_y - 1
         self.damping = damping
         self.reset()
         return
@@ -40,6 +40,16 @@ class UnicycleAgent:
         self.pos_y += self.vel_u * np.sin(self.heading) * dt
         self.heading += self.vel_r * dt % (2*np.pi)
 
-        grid_x = int(self.pos_x % self.max_x)
-        grid_y = int(self.pos_y % self.max_y)
+        ## MAP POS TO INTEGER GRID
+        grid_x = int(max(min(self.pos_x, self.max_x), 0))
+        grid_y = int(max(min(self.pos_y, self.max_y), 0))
+
+        ## BOUNCE OFF THE WALLS OF THE GRID
+        if self.pos_x < 0 or self.pos_x > self.max_x:
+            self.heading = (np.pi - self.heading) % (2*np.pi)
+            self.pos_x = grid_x
+        if self.pos_y < 0 or self.pos_y > self.max_y:
+            self.heading = (-self.heading) % (2*np.pi)
+            self.pos_y = grid_y
+
         return np.array((grid_x, grid_y))
