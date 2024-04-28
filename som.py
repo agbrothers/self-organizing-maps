@@ -1,8 +1,5 @@
 import random
 import numpy as np
-from tqdm import trange
-
-from plot import Anim
 
 
 class SelfOrganizingMap:
@@ -19,6 +16,7 @@ class SelfOrganizingMap:
         ):
         ## NEURAL NET
         self.neurons = np.random.random((n_rows, n_cols, n_channels))
+        self.neurons *= max(n_rows, n_cols)
         row_idxs = (np.tile(np.arange(n_rows), reps=(n_cols,1))).T
         col_idxs = (np.tile(np.arange(n_cols), reps=(n_rows,1)))
         self.idxs = np.stack((row_idxs, col_idxs), axis=-1)
@@ -65,53 +63,22 @@ if __name__ == '__main__':
     random.seed(42)
     np.random.seed(42)
 
+    p = 2
+    dim = 2
     n_rows = 100
     n_cols = 100
-    dim = 2
     d_nbhd = 10
+    lr_init = 0.33
+    lr_decay = 0.999
 
     som = SelfOrganizingMap(
         n_rows=n_rows,
         n_cols=n_cols,
         n_channels=dim,
         d_nbhd=d_nbhd,
-        lr_init=0.33,
-        lr_decay=0.999,
-        p=2,
-    )
-    d_max = som.distance(
-        np.array((0,0)),
-        np.array((n_cols,n_rows))
-    )
-
-    som.neurons *= 100
-    anim = Anim(
-        "random_walk", 
-        dpi=1000, 
-        aspect_ratio=(n_rows/(2*n_cols), 1), 
-        fps=60 #60
-    )
-
-    actions = (
-        [ 1, 0],
-        [ 0, 1],
-        [ 0,-1],
-        [-1, 0],
+        lr_init=lr_init,
+        lr_decay=lr_decay,
+        p=p,
     )
     pos = np.array([1,1])
-    green = np.array([0,255,0])
-
-    for i in trange(6400):
-        move = random.choice(actions)
-        pos += move
-        pos[0] = pos[0] % n_rows
-        pos[1] = pos[1] % n_cols
-        activation, idx = som(pos)
-        activation[idx] = 0
-        image = anim.map_colors(-activation, d_max)
-        grid = np.ones((n_rows, n_cols,3), dtype="uint8") * 255
-        grid[tuple(pos)] = green
-        image[idx] = green
-        anim.step(np.hstack((grid,image)))
-    anim.close()
-    print("done")
+    activation, idx = som(pos)
